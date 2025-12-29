@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>水琴五月生日不是在五月2026</title>
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: linear-gradient(#ffe6f2, #ffd1dc);
+        font-family: Arial, sans-serif;
+    }
+    #score {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        font-size: 24px;
+        font-weight: bold;
+        color: #d6006f;
+    }
+    #message {
+        position: absolute;
+        top: 40%;
+        width: 100%;
+        text-align: center;
+        font-size: 48px;
+        font-weight: bold;
+        color: #ff007f;
+        display: none;
+    }
+    #controls {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    button {
+        font-size: 18px;
+        padding: 8px 16px;
+        margin-left: 10px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background: #ff66a3;
+        color: white;
+        font-weight: bold;
+    }
+    .star {
+        position: absolute;
+        font-size: 32px;
+        cursor: pointer;
+        user-select: none;
+        z-index: -1;
+    }
+    .star.inactive {
+        cursor: default;
+    }
+    #ghostCursor {
+        position: absolute;
+        pointer-events: none;
+        font-size: 32px;
+        transform: translate(-50%, -50%);
+    }
+</style>
+</head>
+<body>
+
+<div id="score">Score: 0 / 10</div>
+<div id="message">🎊 🎉 🎂 💧 水琴五月 💧 Happy Birthday ! 🎂 🎉 🎊</div>
+
+<div id="controls">
+    <button id="startBtn">Start (S)</button>
+    <button id="pauseBtn" style="display: none;">Pause (P)</button>
+</div>
+
+<div id="ghostCursor">👻</div>
+
+<script>
+let score = 0;
+let gameRunning = false;
+let starInterval = null;
+let paused = false;
+
+function createStar() {
+    if (!gameRunning || paused) return;
+
+    const star = document.createElement("div");
+    star.className = "star";
+    star.textContent = "💧";
+
+    star.style.left = Math.random() * window.innerWidth + "px";
+    star.style.top = "-40px";
+
+    document.body.appendChild(star);
+
+    let fallSpeed = 0.8 + Math.random() * 1.2;
+
+    function fall() {
+        if (!gameRunning) return;
+        if (paused) {
+            requestAnimationFrame(fall);
+            return;
+        }
+
+        let top = parseFloat(star.style.top);
+        if (top > window.innerHeight) {
+            star.remove();
+        } else {
+            star.style.top = top + fallSpeed + "px";
+            requestAnimationFrame(fall);
+        }
+    }
+    fall();
+
+    star.onclick = () => {
+        if (!gameRunning || paused) return;
+        score++;
+        document.getElementById("score").textContent = "Score: " + score + " / 10";
+        star.remove();
+
+        if (score >= 10) {
+            showMessage();
+            gameRunning = false;
+            document.getElementById("pauseBtn").style.display = "none";
+            document.querySelectorAll(".star").forEach(star => star.classList.add('inactive'));
+        }
+    };
+}
+
+function showMessage() {
+    const msg = document.getElementById("message");
+    msg.style.display = "block";
+
+    for (let i = 0; i < 80; i++) {
+        const conf = document.createElement("div");
+        conf.textContent = Math.random() < 0.5 ? "🎊" : "🎂";
+        conf.style.position = "absolute";
+        conf.style.left = Math.random() * window.innerWidth + "px";
+        conf.style.top = "-20px";
+        conf.style.fontSize = "24px";
+        document.body.appendChild(conf);
+
+        let speed = 2 + Math.random() * 4;
+        function drop() {
+            if (paused) {
+                requestAnimationFrame(drop);
+                return;
+            }
+            let top = parseFloat(conf.style.top);
+            if (top > window.innerHeight) {
+                conf.remove();
+            } else {
+                conf.style.top = top + speed + "px";
+                requestAnimationFrame(drop);
+            }
+        }
+        drop();
+    }
+
+    for (let i = 0; i < 20; i++) {
+        const balloon = document.createElement("div");
+        balloon.textContent = "🎈";
+        balloon.style.position = "absolute";
+        balloon.style.left = Math.random() * window.innerWidth + "px";
+        balloon.style.top = window.innerHeight + 40 + "px"; // start below screen
+        balloon.style.fontSize = (40 + Math.random() * 20) + "px";
+        document.body.appendChild(balloon);
+
+        let riseSpeed = 1 + Math.random() * 1.5;
+        let drift = (Math.random() * 1.5) - 0.75; // slight left/right wobble
+
+        function rise() {
+            let top = parseFloat(balloon.style.top);
+            let left = parseFloat(balloon.style.left);
+
+            if (top < -100) {
+                balloon.remove();
+            } else {
+                balloon.style.top = top - riseSpeed + "px";
+                balloon.style.left = left + drift + "px";
+                requestAnimationFrame(rise);
+            }
+        }
+        rise();
+    }
+
+}
+
+function startGame() {
+    if (!gameRunning) {
+        score = 0;
+        document.getElementById("score").textContent = "Score: 0 / 10";
+        document.getElementById("message").style.display = "none";
+        document.querySelectorAll(".star").forEach(star => star.remove());
+        gameRunning = true;
+        paused = false;
+        document.getElementById("startBtn").style.display = "none";
+        document.getElementById("pauseBtn").style.display = "inline-block";
+        document.getElementById("pauseBtn").textContent = "Pause (P)";
+        starInterval = setInterval(createStar, 200);
+    }
+}
+
+function togglePause() {
+    if (!gameRunning) return;
+    paused = !paused;
+    document.getElementById("pauseBtn").textContent = (paused ? "Resume" : "Pause") + " (P)";
+    document.querySelectorAll(".star").forEach(star => star.classList.toggle('inactive'));
+}
+
+document.getElementById("startBtn").onclick = startGame;
+document.getElementById("pauseBtn").onclick = togglePause;
+
+// Keyboard controls
+document.addEventListener("keydown", (e) => {
+    if (e.key === "s" || e.key === "S") {
+        startGame();
+    }
+    if (e.key === "p" || e.key === "P") {
+        togglePause();
+    }
+});
+
+// 👻 Ghost cursor follow
+const ghost = document.getElementById("ghostCursor");
+document.addEventListener("mousemove", (e) => {
+    ghost.style.left = e.pageX + 25 + "px";
+    ghost.style.top = e.pageY + 25 + "px";
+});
+</script>
+
+</body>
+</html>
